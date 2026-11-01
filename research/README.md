@@ -1,5 +1,7 @@
 # 隔离调研环境
 
+2026-11-02 更新：用户要求不得使用归档会话。以下 Phase 0 的旧探针/通用读取命令仅允许隔离研究根，不能直接传入用户真实会话根。真实采样使用 `scripts/prepare-unarchived-review.mjs <sessions-root> <workspace-metadata-file> <new-private-output>`，并先后运行范围检查；见 docs/UNARCHIVED-REVIEW.md。
+
 本目录只提交研究依赖清单与 pnpm 锁文件。558 个安装包属于完整 dsh 调研环境，不是 Waymark core 的运行依赖。
 
 使用 Node 24.9+、pnpm 9.15.0，在项目根目录执行：

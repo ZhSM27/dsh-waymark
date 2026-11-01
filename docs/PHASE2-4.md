@@ -1,5 +1,7 @@
 # Phase 2–4 验收记录
 
+本页的十会话及八项认可为归档限制提出前的历史批次，不作为当前未归档专项评估指标。2026-11-02 新范围、子代理复核及补样本结果见 [UNARCHIVED-REVIEW.md](UNARCHIVED-REVIEW.md)。
+
 ## Phase 2：接入通过
 
 - dsh 适配仅按实际安装的 0.2.1-rc.5 公共契约，格式版本 4；官方 sessionQuery 读取，CLI bundle 安装。
