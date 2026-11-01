@@ -1,0 +1,62 @@
+[
+  {
+    "package": "@deepseek-ai/dsh-commands",
+    "version": "0.2.1-rc.5",
+    "file": "lib/index.js",
+    "sha256": "88909a0915e4e3b2148c72a912987c3e29ba025b5dea589a0f4543040dc34750"
+  },
+  {
+    "package": "@deepseek-ai/dsh-commands",
+    "version": "0.2.1-rc.5",
+    "file": "lib/types/types.d.ts",
+    "sha256": "aac98b93d3326f4dbd4e94f87cf3320746916b9f4fbdf8567ac25ff77f73609c"
+  },
+  {
+    "package": "@deepseek-ai/dsh-llm",
+    "version": "0.2.1-rc.5",
+    "file": "lib/types/message.d.ts",
+    "sha256": "c1e9b9f05fc0eab9bb791d6cbfc42828e608539ba16cd0e441164aff005b9775"
+  },
+  {
+    "package": "@deepseek-ai/dsh-llm",
+    "version": "0.2.1-rc.5",
+    "file": "lib/types/types.d.ts",
+    "sha256": "f07f8f22ba299522421716e5abcf2d3ed4147a9ffc500b14d943701ee40d6ee8"
+  },
+  {
+    "package": "@deepseek-ai/dsh-session",
+    "version": "0.2.1-rc.5",
+    "file": "lib/types/types.d.ts",
+    "sha256": "8e3b1b7f54d504ca91d3496376f9ea619f99ce1afe2739d35d9c2f2f69320950"
+  },
+  {
+    "package": "@deepseek-ai/dsh-session-persistence",
+    "version": "0.2.1-rc.5",
+    "file": "lib/types/index.d.ts",
+    "sha256": "dbaf738284416ceb76e365cf2844d50527750e4af97aaad2d3f4f1bd006faf5a"
+  },
+  {
+    "package": "@deepseek-ai/dsh-session-persistence-jsonl",
+    "version": "0.2.1-rc.5",
+    "file": "lib/index.js",
+    "sha256": "973dd78679b2661d6f492343bc22b124ae958aa597d3b36c698a2c650f909984"
+  },
+  {
+    "package": "@deepseek-ai/dsh-tool-bash",
+    "version": "0.2.1-rc.5",
+    "file": "lib/index.js",
+    "sha256": "a1215d7bcaf82c0755be48321ef6bb45075f1cb33296d6263009e9d10fd596f6"
+  },
+  {
+    "package": "@deepseek-ai/dsh-tool-fs",
+    "version": "0.2.1-rc.5",
+    "file": "lib/index.js",
+    "sha256": "b11d3fa50b9042019a91cc38a6abe35d74ed651374278f95e60b42734e079df1"
+  },
+  {
+    "package": "@deepseek-ai/dsh-tool-pwsh",
+    "version": "0.2.1-rc.5",
+    "file": "lib/index.js",
+    "sha256": "94c7f68c425e62c8006907b3f4fea771935321581fd2327b7ee1f0ba8d15eec1"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "name": "dsh-waymark",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local, evidence-grounded agent workflow diagnostics for DeepSeek Harness",
+  "engines": { "node": ">=24.9.0" },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "probe": "node scripts/probe-session.mjs"
+  }
+}
