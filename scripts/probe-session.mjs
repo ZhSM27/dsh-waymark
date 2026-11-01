@@ -12,7 +12,7 @@ export function countEvents(events) {
   return counts;
 }
 
-async function sourceDigest(root) {
+export async function sourceDigest(root) {
   const hash = createHash('sha256');
   async function visit(dir) {
     const entries = (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name));

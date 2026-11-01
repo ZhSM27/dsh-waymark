@@ -79,7 +79,7 @@ export function analyzeSession(input: SessionInput, overrides: Partial<Config> =
   for (const event of input.events) {
     validatePosition(event, lastSeq); lastSeq = event.seq;
     if (event.turn !== null) turns.add(event.turn);
-    if (event.kind === 'boundary' || (event.kind === 'user' && event.source !== 'injected')) epoch++;
+    if (event.barrier || event.kind === 'boundary' || (event.kind === 'user' && event.source !== 'injected')) epoch++;
     if (event.kind === 'tool_call') {
       if (!event.id || !event.tool || calls.has(event.id)) throw new TypeError('Tool call ids must be nonempty and unique');
       calls.set(event.id, event);

@@ -1,6 +1,6 @@
 import { defineConfig } from 'tsdown';
 
-export default defineConfig({
+export default defineConfig([{
   entry: ['src/core/index.ts'],
   outDir: 'lib/core',
   format: 'esm',
@@ -8,4 +8,8 @@ export default defineConfig({
   target: 'es2024',
   dts: true,
   clean: true,
-});
+}, {
+  entry: { plugin: 'src/plugin.ts' },
+  outDir: 'lib', format: 'esm', platform: 'node', target: 'es2024',
+  dts: true, clean: false, fixedExtension: false,
+}]);

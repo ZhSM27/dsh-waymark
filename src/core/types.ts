@@ -3,6 +3,7 @@ export interface EventPosition {
   readonly seq: number;
   readonly turn: number | null;
   readonly step?: number;
+  readonly barrier?: boolean;
 }
 
 export interface RequestUsage {

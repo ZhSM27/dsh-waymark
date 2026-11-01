@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Local, evidence-grounded agent workflow diagnostics for DeepSeek Harness",
-  "engines": { "node": ">=24.11.0" },
+  "engines": { "node": ">=24.11.0", "dsh": "0.2.1-rc.5" },
+  "main": "./lib/plugin.js",
+  "exports": { ".": { "types": "./lib/plugin.d.ts", "default": "./lib/plugin.js" }, "./core": { "types": "./lib/core/index.d.ts", "default": "./lib/core/index.js" } },
+  "files": ["lib", "cordis.patch.yml", "README.md", "LICENSE"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "typecheck": "tsc --noEmit",
