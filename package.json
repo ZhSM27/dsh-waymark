@@ -4,10 +4,18 @@
   "private": true,
   "type": "module",
   "description": "Local, evidence-grounded agent workflow diagnostics for DeepSeek Harness",
-  "engines": { "node": ">=24.9.0" },
+  "engines": { "node": ">=24.11.0" },
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsdown",
+    "check:build": "node test/bundle-smoke.mjs",
+    "demo": "node scripts/demo-core.mjs",
     "test": "node --test test/*.test.mjs",
     "probe": "node scripts/probe-session.mjs"
+  },
+  "devDependencies": {
+    "tsdown": "0.22.2",
+    "typescript": "6.0.3"
   }
 }
