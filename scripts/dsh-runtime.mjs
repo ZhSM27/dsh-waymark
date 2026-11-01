@@ -3,6 +3,7 @@ import { readdir, realpath } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import {assertPrivateResearchRoot} from './archive-policy.mjs';
 
 export async function researchModule(name) {
   const store = resolve('.research/node_modules/.pnpm');
@@ -13,6 +14,7 @@ export async function researchModule(name) {
 }
 
 export async function openRuntime(root) {
+  await assertPrivateResearchRoot(root);
   const require = createRequire(await realpath(resolve('.research/node_modules/@deepseek-ai/dsh/package.json')));
   const { Context } = await import(pathToFileURL(require.resolve('@deepseek-ai/cordis')).href);
   const [{ SessionStore, Session }, backend, { SqliteSessionQueryEngine }, { CommandRuntime }] = await Promise.all([

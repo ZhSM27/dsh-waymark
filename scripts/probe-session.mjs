@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import {assertPrivateResearchRoot} from './archive-policy.mjs';
 
 export function countEvents(events) {
   const counts = { user: 0, assistant: 0, tool_call: 0, tool_result: 0, other: 0 };
@@ -13,6 +14,7 @@ export function countEvents(events) {
 }
 
 export async function sourceDigest(root) {
+  await assertPrivateResearchRoot(root);
   const hash = createHash('sha256');
   async function visit(dir) {
     const entries = (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name));
@@ -38,6 +40,7 @@ async function installedPackage(name) {
 }
 
 export async function probe(root, id) {
+  await assertPrivateResearchRoot(root);
   const cliRequire = createRequire(await realpath(resolve('.research/node_modules/@deepseek-ai/dsh/package.json')));
   const { Context } = await import(pathToFileURL(cliRequire.resolve('@deepseek-ai/cordis')).href);
   const backendRoot = await installedPackage('@deepseek-ai/dsh-session-persistence-jsonl');
