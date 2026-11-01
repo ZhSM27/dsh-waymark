@@ -1,0 +1,10 @@
+import {rm} from 'node:fs/promises';
+import {resolve,relative,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),target=resolve(root,'lib');
+if(relative(root,target)!=='lib')throw new Error('Unexpected generated output directory');
+await rm(target,{recursive:true,force:true});
+const result=spawnSync(process.execPath,[resolve(root,'node_modules/tsdown/dist/run.mjs')],{cwd:root,stdio:'inherit'});
+if(result.error)throw result.error;
+process.exitCode=result.status??1;

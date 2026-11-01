@@ -65,9 +65,20 @@ test('command defaults to current session, last is scoped, and cancellation/erro
   const invocation={agent:{session:{id:'synthetic-current',header:{cwd:'synthetic-workspace'}}},rawInput:'retro',signal:new AbortController().signal};
   assert.equal((await definition.handler(invocation)).kind,'success');assert.equal(selected,'synthetic-current');
   await definition.handler({...invocation,rawInput:'retro last'});assert.equal(selected,'synthetic-earlier');
+  const json=await definition.handler({...invocation,rawInput:'retro --json'});assert.equal(JSON.parse(json.text).schemaVersion,'0.1');
+  assert.match((await definition.handler({...invocation,rawInput:'retro --markdown'})).text,/# Waymark/);
+  assert.equal((await definition.handler({...invocation,rawInput:'retro --json --markdown'})).kind,'error');
   assert.equal((await definition.handler({...invocation,rawInput:'other'})).kind,'error');
   const controller=new AbortController();controller.abort();
   assert.match((await definition.handler({...invocation,signal:controller.signal})).text,/cancelled/);
   ctx.sessionQuery.readSession=async()=>{throw new Error('PRIVATE PAYLOAD');};
   const result=await definition.handler(invocation);assert.equal(result.kind,'error');assert.doesNotMatch(result.text,/PRIVATE/);
+});
+
+test('file semantics use canonical result metadata and verified read range/content',()=>{
+  const raw=snapshot([rawCall('a','read',{file_path:'sample.txt'}),rawResult('a','Synthetic content')]);
+  raw.session.cwd='/synthetic-workspace';
+  raw.events[1].data.meta={path:'/synthetic-workspace/sample.txt',offset:1,lines:[{number:1,text:'Example'}]};
+  const file=adaptDshSession(raw).input.events.at(-1).file;
+  assert.equal(file.operation,'read');assert.equal(file.range,'1:1');assert.equal(file.fingerprint.length,64);
 });

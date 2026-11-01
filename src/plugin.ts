@@ -1,7 +1,8 @@
 import { adaptDshSession } from './adapters/dsh.ts';
 import type { DshSnapshot } from './adapters/dsh.ts';
-import { analyzeSession, renderReport, resolveConfig } from './core/index.ts';
+import { analyzeSession, renderReport, renderMarkdown, resolveConfig } from './core/index.ts';
 import type { Config } from './core/index.ts';
+import { exportMarkdown } from './host/export.ts';
 
 export const name = 'waymark';
 export const inject = ['commands', 'sessionQuery'];
@@ -25,13 +26,17 @@ export function apply(ctx: Services, overrides: Partial<Config> = {}): void {
   const config = resolveConfig(overrides);
   ctx.commands.register({
     name: 'waymark', description: 'Local evidence-grounded workflow diagnostics; no model request',
-    input: { hint: 'retro [session-id | last]' },
+    input: { hint: 'retro [session-id | last] [--json | --markdown | --export report.md]' },
     async handler(invocation) {
       try {
         invocation.signal.throwIfAborted();
         const parts = invocation.rawInput.trim().split(/\s+/).filter(Boolean);
-        if (parts[0] !== 'retro' || parts.length > 2) return { kind: 'error', text: 'Usage: /waymark retro [session-id | last]' };
-        let id = parts[1] ?? invocation.agent.session.id;
+        const usage='Usage: /waymark retro [session-id | last] [--json | --markdown | --export report.md]';
+        if (parts.shift() !== 'retro') return { kind: 'error', text: usage };
+        let id=parts[0]&&!parts[0].startsWith('--')?parts.shift()!:invocation.agent.session.id;
+        const mode=parts.shift();
+        const filename=mode==='--export'?parts.shift():undefined;
+        if(parts.length||mode&&!['--json','--markdown','--export'].includes(mode)||mode==='--export'&&!filename) return {kind:'error',text:usage};
         if (id === 'last') {
           const cwd = invocation.agent.session.header.cwd;
           if (!cwd) return { kind: 'error', text: 'No workspace metadata; pass an explicit session id.' };
@@ -45,10 +50,23 @@ export function apply(ctx: Services, overrides: Partial<Config> = {}): void {
         const snapshot = await ctx.sessionQuery.readSession(id);
         invocation.signal.throwIfAborted();
         const adapted = adaptDshSession(snapshot);
-        const report = analyzeSession(adapted.input, config);
-        return { kind: 'success', text: renderReport({ ...report, issues: [...report.issues, ...adapted.issues] }) };
-      } catch {
-        return { kind: 'error', text: invocation.signal.aborted ? 'Waymark cancelled.' : 'Waymark could not read or validate the session. Check id, format and dsh compatibility; raw session diagnostics are not printed.' };
+        const analysis = analyzeSession(adapted.input, config);
+        const report={...analysis,issues:[...analysis.issues,...adapted.issues]};
+        invocation.signal.throwIfAborted();
+        if(mode==='--json') return {kind:'success',text:JSON.stringify(report,null,2)};
+        if(mode==='--markdown') return {kind:'success',text:renderMarkdown(report)};
+        if(mode==='--export') {
+          const cwd=invocation.agent.session.header.cwd;
+          if(!cwd) return {kind:'error',text:'No workspace metadata; Markdown export unavailable.'};
+          const target=await exportMarkdown(cwd,filename!,renderMarkdown(report),invocation.signal);
+          return {kind:'success',text:`Markdown exported locally: ${target}`};
+        }
+        return { kind: 'success', text: renderReport(report) };
+      } catch(error) {
+        const code=(error as {code?:string}|null)?.code;
+        return { kind: 'error', text: invocation.signal.aborted ? 'Waymark cancelled.' : code==='EEXIST'
+          ? 'Export target already exists. Choose a new report filename.'
+          : 'Waymark could not complete the operation. Check session id, format, compatibility and export filename/permissions; raw session diagnostics are not printed.' };
       }
     },
   });

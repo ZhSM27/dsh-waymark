@@ -1,5 +1,6 @@
 import { resolveConfig } from './config.ts';
 import { argumentSimilarity, canonicalArgs } from './normalize.ts';
+import { detectRereads, detectCorrections } from './extra-rules.ts';
 import { eventSize, ratio, sumSizes, usageSize } from './tokens.ts';
 import type { Config, Event, Evidence, FailureFinding, Finding, OutputEntry, Report, SessionInput, ToolCall, ToolResult } from './types.ts';
 
@@ -101,7 +102,7 @@ export function analyzeSession(input: SessionInput, overrides: Partial<Config> =
   if ([...results.keys()].some(id => !calls.has(id))) issues.push('存在未配对结果；保留其输出体积，但不推断所属工具或失败循环。');
   const contentSize = sumSizes(input.events.map(eventSize));
   if (contentSize.value === null) issues.push('部分事件缺少文本和内容 token 数，会话总体体积与比例不可用。');
-  const findings: Finding[] = detectFailures(attempts, config);
+  const findings: Finding[] = [...detectFailures(attempts, config), ...detectRereads(input.events,calls,config), ...detectCorrections(input.events,config)];
   const outputEntries: OutputEntry[] = [...results.values()].map(result => {
     const size = eventSize(result);
     return { callId: result.callId, tool: calls.get(result.callId)?.tool ?? null,
@@ -116,7 +117,7 @@ export function analyzeSession(input: SessionInput, overrides: Partial<Config> =
         suggestion: '按任务需要先搜索或限制输出范围，只保留相关片段；确需完整输出时保留。' });
     }
   }
-  const repeatedIds = new Set(findings.flatMap(finding => finding.rule === 'R1' ? finding.repeatedCallIds : []));
+  const repeatedIds = new Set(findings.flatMap(finding => finding.rule === 'R1'||finding.rule==='R2' ? finding.repeatedCallIds : []));
   const repeatedEvents = attempts.filter(attempt => repeatedIds.has(attempt.call.id))
     .flatMap(attempt => [attempt.call, attempt.result!]);
   const suspectedAvoidableContent = sumSizes(repeatedEvents.map(eventSize));
@@ -124,6 +125,16 @@ export function analyzeSession(input: SessionInput, overrides: Partial<Config> =
   const usages = assistants.flatMap(event => event.requestUsage ? [usageSize(event.requestUsage)] : []);
   const requestUsage = usages.length === assistants.length && assistants.length > 0
     ? sumSizes(usages) : { value: null, method: 'unavailable' as const };
+  const outcomes:Record<ToolResult['outcome'],number>={success:0,failure:0,unknown:0,interrupted:0,unresolved:0};
+  const toolCounts=new Map<string,number>();
+  for(const attempt of attempts) {
+    outcomes[attempt.result?.outcome??'unresolved']++;
+    toolCounts.set(attempt.call.tool,(toolCounts.get(attempt.call.tool)??0)+1);
+  }
+  const proposalGroups=new Map<string,string[]>();
+  for(const finding of findings) {
+    const sources=proposalGroups.get(finding.suggestion)??[];sources.push(finding.id);proposalGroups.set(finding.suggestion,sources);
+  }
   return {
     schemaVersion: '0.1', sessionId: input.id, scope: input.scope, turns: turns.size,
     findings: findings.sort((a, b) => a.evidence[0]!.seq - b.evidence[0]!.seq || a.rule.localeCompare(b.rule)),
@@ -131,5 +142,8 @@ export function analyzeSession(input: SessionInput, overrides: Partial<Config> =
       .sort((a, b) => b.size.value! - a.size.value! || a.position.seq - b.position.seq).slice(0, config.topN),
     contentSize, suspectedAvoidableContent, suspectedAvoidableRatio: ratio(suspectedAvoidableContent, contentSize),
     requestUsage, requestUsageCoverage: { reported: usages.length, assistantMessages: assistants.length }, issues,
+    audit:{toolCalls:attempts.length,outcomes,tools:[...toolCounts].map(([tool,calls])=>({tool,calls})).sort((a,b)=>b.calls-a.calls||a.tool.localeCompare(b.tool)),
+      verification:attempts.flatMap(attempt=>attempt.call.verification?[{kind:attempt.call.verification,position:{seq:attempt.call.seq,turn:attempt.call.turn},outcome:attempt.result?.outcome??'unresolved'}]:[])},
+    proposals:[...proposalGroups].slice(0,3).map(([text,sourceFindingIds])=>({text,sourceFindingIds,scope:'project-candidate'})),
   };
 }

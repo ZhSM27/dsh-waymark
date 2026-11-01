@@ -22,15 +22,28 @@ function range(evidence: readonly Evidence[]): string {
 }
 
 function renderFinding(finding: Finding): string[] {
-  const heading = `[${finding.rule} ${finding.rule === 'R1' ? '重复失败' : '巨型输出'}] ${range(finding.evidence)}`;
+  const titles={R1:'重复失败',R2:'重复读取',R3:'巨型输出',R4:'用户纠偏'};
+  const heading = `[${finding.rule} ${titles[finding.rule]}] ${range(finding.evidence)}`;
   const body = finding.rule === 'R1' ? [
     `  ${safeInline(finding.tool)} 连续失败 ${finding.attempts} 次，参数${finding.match === 'exact' ? '相同' : finding.match === 'normalized' ? '归一化后相同' : '相似'}，错误标识或文本相同。`,
     `  首次之后的重复调用与输出：${sizeText(finding.repeatedContent)}。`,
+  ] : finding.rule==='R2'?[
+    `  ${safeInline(finding.path)} 同一范围读取 ${finding.reads} 次；${finding.sameContentVerified?'返回内容一致':'返回内容一致性未知'}。`,
+    `  首次之后的重复调用与输出：${sizeText(finding.repeatedContent)}。`,
+  ] : finding.rule==='R4'?[
+    `  命中纠偏词“${safeInline(finding.keyword)}”；用户消息前 80 字符：${safeInline(finding.excerpt)}`,
   ] : [
     `  ${safeInline(finding.output.tool ?? '未配对工具')} 输出 ${sizeText(finding.output.size)}；占本次分析内容体积 ${percent(finding.output.sessionContentRatio)}。`,
   ];
-  return [heading, ...body, `  置信度：${finding.confidence === 'high' ? '高' : '中'}（指发现事实，非浪费结论）。`,
+  return [heading, ...body, `  置信度：${{high:'高',medium:'中',low:'低'}[finding.confidence]}（指发现事实，非浪费结论）。`,
     `  建议规则：${finding.suggestion}`, ...finding.limitations.map(note => `  边界：${note}`)];
+}
+
+export function renderMarkdown(report:Report):string {
+  const body=renderReport(report,{maxFindings:Number.MAX_SAFE_INTEGER});
+  const longest=(body.match(/`+/g)??[]).reduce((max,run)=>Math.max(max,run.length),2);
+  const fence='`'.repeat(longest+1);
+  return `# Waymark 复盘报告\n\n${fence}text\n${body}\n${fence}\n`;
 }
 
 /** Pure plain-text rendering: no I/O, model calls, or session mutations. */
@@ -41,6 +54,7 @@ export function renderReport(report: Report, options: { maxFindings?: number } =
     `Waymark · 会话 ${safeInline(report.sessionId)} · 共 ${report.turns} 轮`,
     `范围：${report.scope === 'full-log' ? '完整历史（非当前上下文快照）' : '当前模型可见内容'}。`,
     `发现 ${report.findings.length} 项；疑似可避免的重复内容：${sizeText(report.suspectedAvoidableContent)}，占分析内容体积 ${percent(report.suspectedAvoidableRatio)}。`,
+    `工具调用 ${report.audit.toolCalls} 次：成功 ${report.audit.outcomes.success}，明确失败 ${report.audit.outcomes.failure}，未知 ${report.audit.outcomes.unknown}，中断 ${report.audit.outcomes.interrupted}，未解决 ${report.audit.outcomes.unresolved}。`,
     '以上体积不等同于实际节省的请求 token；大输出不直接计入可避免总额。',
   ];
   for (const finding of report.findings.slice(0, max)) lines.push('', ...renderFinding(finding));
@@ -52,6 +66,14 @@ export function renderReport(report: Report, options: { maxFindings?: number } =
     }
   }
   lines.push('', `模型请求用量：${sizeText(report.requestUsage)}；覆盖 ${report.requestUsageCoverage.reported}/${report.requestUsageCoverage.assistantMessages} 条助手消息，单独统计。`);
+  if(report.audit.verification.length) {
+    lines.push('', '已观察到的验证命令（仅覆盖已识别的命令形式）：');
+    for(const item of report.audit.verification) lines.push(`  ${item.kind} · seq ${item.position.seq} · ${item.outcome}`);
+  }
+  if(report.proposals.length) {
+    lines.push('','AGENTS.md 项目级候选规则（请先审核，未自动采纳）：');
+    for(const proposal of report.proposals) lines.push(`  - ${proposal.text} [依据 ${proposal.sourceFindingIds.join(', ')}]`);
+  }
   for (const issue of report.issues) lines.push(`数据边界：${issue}`);
   return lines.join('\n');
 }

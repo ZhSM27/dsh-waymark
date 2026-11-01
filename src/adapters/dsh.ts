@@ -1,5 +1,7 @@
 import type { Event, RequestUsage, SessionInput, ToolResult } from '../core/types.ts';
 import { usageSize } from '../core/tokens.ts';
+import { createHash } from 'node:crypto';
+import { win32, posix } from 'node:path';
 
 /** Structural public DTOs verified against dsh 0.2.1-rc.5. Runtime input is validated. */
 export interface DshSnapshot {
@@ -75,14 +77,32 @@ export function adaptDshSession(snapshot: DshSnapshot): { input: SessionInput; i
         let args: unknown = data.arguments, valid = false;
         try { args = JSON.parse(data.arguments); valid = true; } catch { issues.push(`seq ${event.seq}: malformed tool arguments`); }
         calls.set(data.callId, { tool: data.name, args: record(args), valid });
-        events.push({ ...position, kind: 'tool_call', id: data.callId, tool: data.name, args, argsText: data.arguments, ...(!valid ? { barrier: true } : {}) });
+        const command=record(args).command;
+        const check=(data.name==='bash'||data.name==='pwsh')&&typeof command==='string'&&!/[;&|\n`$]/.test(command)
+          ? /^(?:npm|pnpm|yarn|bun)\s+(?:run\s+)?(test(?::[\w-]+)?|build|lint|typecheck)(?=\s|$)/.exec(command.trim()):null;
+        const verification=check?.[1]?.split(':')[0] as 'test'|'build'|'lint'|'typecheck'|undefined;
+        events.push({ ...position, kind: 'tool_call', id: data.callId, tool: data.name, args, argsText: data.arguments,
+          ...(verification?{verification}:{}), ...(!valid ? { barrier: true } : {}) });
         break;
       }
       case 'tool/result': {
         const message = record(data.message);
         if (typeof message.toolCallId !== 'string') throw new TypeError('Malformed dsh tool result');
         const call = calls.get(message.toolCallId), body = text(message.content);
-        events.push({ ...position, kind: 'tool_result', callId: message.toolCallId, text: body,
+        let file:ToolResult['file'];
+        if(call&&['read','write','edit'].includes(call.tool)) {
+          const meta=record(data.meta), rawPath=typeof meta.path==='string'?meta.path:call.args.file_path;
+          if(typeof rawPath==='string' && (snapshot.session.cwd || /^(?:\/|[A-Za-z]:[\\/])/.test(rawPath))) {
+            const paths=/^[A-Za-z]:[\\/]|\\/.test(rawPath)||/^[A-Za-z]:/.test(snapshot.session.cwd??'')?win32:posix;
+            const canonical=paths.resolve(snapshot.session.cwd??'/',rawPath);
+            const lines=Array.isArray(meta.lines)?meta.lines.map(line=>record(line)):undefined;
+            const verified=integer(meta.offset)&&lines?.every(line=>typeof line.text==='string'&&integer(line.number));
+            file={operation:call.tool as 'read'|'write'|'edit',path:paths===win32?canonical.toLowerCase():canonical,
+              ...(verified?{range:`${meta.offset}:${lines!.at(-1)?.number??meta.offset}`,fingerprint:createHash('sha256').update(lines!.map(line=>line.text).join('\n')).digest('hex')}
+                :call.tool==='read'?{range:JSON.stringify([call.args.offset??null,call.args.limit??null])}:{})};
+          }
+        }
+        events.push({ ...position, kind: 'tool_result', callId: message.toolCallId, text: body, ...(file?{file}:{}),
           ...(call?.valid === false ? { outcome: 'unknown', outcomeSource: 'unknown' } as const : outcome(call?.tool, data, body, call?.args ?? {})) });
         break;
       }
