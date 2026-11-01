@@ -2,7 +2,7 @@
 
 ## 分层
 
-`src/core/index.ts` 导出 Event/SessionInput/Report 等类型、DEFAULT_CONFIG、resolveConfig、analyzeSession、renderReport。core 的导入全部位于 core 内；无 dsh、Node、文件系统、网络或模型依赖。API 接收内存数据，返回结构化报告与纯文本。构建产物为 `lib/core/index.js` 和 `index.d.ts`，未配置插件入口或安装 manifest。
+`src/core/index.ts` 导出 Event/SessionInput/Report 等类型、DEFAULT_CONFIG、resolveConfig、analyzeSession、renderReport、renderMarkdown、summarizeReview。core 的导入全部位于 core 内；无 dsh、Node、文件系统、网络或模型依赖。API 接收内存数据，返回结构化报告与文本。构建产物为 `lib/core/index.js` 和 `index.d.ts`；独立宿主入口在 `src/plugin.ts`，不属于核心。
 
 ```ts
 import { analyzeSession, renderReport } from './src/core/index.ts';
@@ -76,4 +76,12 @@ structured 失败来源且参数完全相同可标高置信度；归一化/近�
 
 `renderReport(report, {maxFindings: 3})` 默认展开前三项（按原始证据顺序），提示剩余数量，并展示输出排行。每项都保留轮次/seq 证据、计数口径、建议和限制。标题里的不可信字符串去除换行、控制字符与双向文本控制，限制长度；不直接打印原始错误输出或参数正文。结果是纯文本，不是可安全插入任意 HTML 的片段。
 
-JSON 文件输出、Markdown 导出、R2/R4 和统一持久化配置属于 Phase 3，当前只返回内存中的 Report 对象。
+Phase 3 已加入 R2/R4 和 renderMarkdown；宿主命令支持 JSON、Markdown 与显式文件导出。core 仍只返回内存对象/字符串，不持久化配置。完整配置见 README。
+
+## 后续实现补充
+
+R2 使用适配器提供的 result.file（operation/path/range/fingerprint），仅成功读参与分组；成功 write/edit 及边界切段，跨编辑在途读取不分配给新版本。范围/内容缺失会降低置信度。R4 仅使用真实用户消息和上次人工输入后的工具活动，英文词边界，前 80 个 code point，低置信度且不计体积。
+
+配置新增 rereadMin=3、correctionKeywords，未知键拒绝。Report 新增 audit（工具结局及保守验证命令观察）和 proposals（按建议文本去重、最多三条、保留全部来源 finding id）。summarizeReview 仅计算实际人工 agree/disagree，未评议/不确定不算认同，零样本标 no-findings。
+
+适配器与导出层可以使用 Node，但独立的 tsconfig.core.json 继续以空 types、ES2024 lib 检查纯核心。详见 PHASE2-4.md 的真实验证限制。
