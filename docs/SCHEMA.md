@@ -41,6 +41,8 @@ Phase 0 使用官方 `@deepseek-ai/dsh-session-persistence-jsonl` provider，挂
 
 Message 公共字段为 `id`、`role`、`content`、`source`。content 是块数组，文本块为 `{type:'text', text}`，还有 reasoning/image/file/tool-call 等。不能直接 `String(content)`。用户角色也可能是 skill、指令或其他注入，R4 不能只看 role。
 
+2026-11-02 浏览器实测复核：turn/end 的 reason 是带 kind 的联合对象，正常完成为 `{kind:'completed'}`，不是字符串。delivery-accepted 是 dsh-session-log-deepseek 的投递水位元数据，session/title 及 session/title-llm-request 为标题元数据，不改变工具执行或模型可见任务，不应清除重复失败链；未知必需事件仍保守处理。详见 BROWSER-ACCEPTANCE.md。
+
 ToolResultMessage 另含 `toolCallId` 与可选 `isError`，`source` 为 `{kind:'tool', callId}`。工具调用也可能出现在 assistant 的 tool-call 内容块中；计数以独立 `tool/call` 为准，不能再重复产生调用。
 
 ## 失败与文件操作

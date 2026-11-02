@@ -43,6 +43,8 @@ Phase 2–3 已实现并通过原生集成与合成测试。插件实际安装�
 
 ## 实时干预方案状态
 
+2026-11-02 后续：用户授权使用本地 DeepSeek 密钥进行 computer-use 测试，最终在 Codex IAB 完成原生命令、R1/R3 真实送达和仅用户可见验证。修复投递水位误切段、turn/end.reason 联合对象误判两处问题，78 项回归通过；测试只涉及隔离新建合成数据。详情见 docs/BROWSER-ACCEPTANCE.md，未扩大为原 Desktop 或所有生命周期已通过。
+
 用户随后授权实施。现已实现归档准入、增量 observe/warn、提示预算与反馈，73 项合成测试及真实 rc.5 原生流水线通过；完整 UI、原中断疑点复现、G3/G4 仍未完成，见 docs/LIVE-VALIDATION.md。本轮没有读取真实会话、部署用户原 profile 或发布。
 
 2026-11-02：只做设计与已安装源码核对，未读取会话。本机 rc.2 带定制改动：user-approval 实际 bundle 自动返回 allowed-once，repeat-tool-reminder 监听禁用；不能依据包版本推断人工确认界面存在。rc.5 的同步 tools.guard 可作附加拒绝条件，post-execute 的 block 不等同于阻止工具执行，pre-step 的 reject 不等同于可恢复暂停。方案先交付 observe/warn，归档保护为前置；更强干预保留明确验收门槛，不自动启用。

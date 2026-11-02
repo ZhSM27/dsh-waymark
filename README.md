@@ -6,7 +6,7 @@ DeepSeek Harness 的本地 Agent 工作流程优化插件：从已保存会话�
 
 ## 安装
 
-v0.2 开发中已加入 observe/warn 和生产归档准入，见 [验收记录](docs/LIVE-VALIDATION.md)。原生流水线验证通过，完整 Web 命令 UI 验收待完成，当前不提供自动拦截。
+v0.2 开发中已加入 observe/warn 和生产归档准入。已在 Codex 内置浏览器用本地 DeepSeek key 验证原生命令、R1/R3 提醒送达和仅用户可见模式，见 [浏览器验收](docs/BROWSER-ACCEPTANCE.md) 与 [范围记录](docs/LIVE-VALIDATION.md)。当前不提供自动拦截。
 
 需要 Node.js 24.11+（实测 24.22.2）和 pnpm 9.15.0。包名为 `dsh-waymark`，npm 同名是否可用需发布前重新检查；目前不要运行 registry 安装命令。
 
