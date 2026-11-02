@@ -1,0 +1,25 @@
+name: Bug report / 问题反馈
+description: Report a failure or an incorrect finding without uploading private conversations.
+body:
+  - type: markdown
+    attributes:
+      value: 请勿上传原始对话、密钥、私人路径或完整配置。请使用合成或脱敏的最小复现。
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Waymark, dsh, Node.js and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected behavior / 复现与预期
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / 实际结果
+    validations:
+      required: true

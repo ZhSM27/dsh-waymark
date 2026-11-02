@@ -1,8 +1,11 @@
 import {mkdir} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
+import {existsSync} from 'node:fs';
 import {dirname,resolve,join} from 'node:path';
 const destination=resolve('.research/packages');await mkdir(destination,{recursive:true});
-const npm=join(dirname(process.execPath),'node_modules/npm/bin/npm-cli.js');
+const npm=[join(dirname(process.execPath),'node_modules/npm/bin/npm-cli.js'),
+  resolve(dirname(process.execPath),'../lib/node_modules/npm/bin/npm-cli.js')].find(path=>existsSync(path));
+if(!npm)throw new Error('Cannot locate the npm CLI shipped with Node.js');
 const run=spawnSync(process.execPath,[npm,'pack','--json','--ignore-scripts','--pack-destination',destination],{encoding:'utf8'});
 if(run.status!==0)throw new Error('Local npm pack failed');
 const [manifest]=JSON.parse(run.stdout);

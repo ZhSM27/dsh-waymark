@@ -2,13 +2,19 @@
 
 DeepSeek Harness 的本地 Agent 工作流程优化插件：从已保存会话中定位重复尝试、重复读取、大输出与用户纠偏，给出带证据的复盘和可审核的 AGENTS.md 候选规则。
 
-**v0.1.0 本地候选版**。Phase 2–3 已实现；历史八项发现获用户认同后，已按未归档限制完成子代理补充复核，目前有中断分类及纠偏边界线索待跟进。尚未公开发布。仅适配并验证 **dsh 0.2.1-rc.5**；dsh 是开发者预览，升级可能破坏接口。
+**0.2.0-alpha.1 · 开发者预览，欢迎反馈。** 支持会话复盘与显式开启的实时提醒；自动拦截尚未实现。仅适配并验证 **dsh 0.2.1-rc.5**；dsh 升级可能破坏接口。请先阅读 [已知限制](docs/KNOWN-ISSUES.md)。
 
 ## 安装
 
-v0.2 开发中已加入 observe/warn 和生产归档准入。已在 Codex 内置浏览器用本地 DeepSeek key 验证原生命令、R1/R3 提醒送达和仅用户可见模式，见 [浏览器验收](docs/BROWSER-ACCEPTANCE.md) 与 [范围记录](docs/LIVE-VALIDATION.md)。当前不提供自动拦截。
+已在 Codex 内置浏览器验证原生命令、R1/R3 提醒送达和仅用户可见模式，见 [浏览器验收](docs/BROWSER-ACCEPTANCE.md)。
 
-需要 Node.js 24.11+（实测 24.22.2）和 pnpm 9.15.0。包名为 `dsh-waymark`，npm 同名是否可用需发布前重新检查；目前不要运行 registry 安装命令。
+需要 Node.js 24.11+（实测 24.22.2）及匹配版本的 dsh。安装 Alpha 后重启对应 profile：
+
+```sh
+dsh plugin --profile web add -w dsh-waymark@alpha
+```
+
+卸载：`dsh plugin --profile web remove -w dsh-waymark`，随后重启。源码构建另外需要 pnpm 9.15.0。
 
 从本项目构建：
 
@@ -21,10 +27,10 @@ pnpm check:build
 pnpm check:package
 ```
 
-本地 tgz 生成到 `.research/packages/dsh-waymark-0.1.0.tgz`。在装有匹配版本 dsh 的终端安装到 web profile：
+本地 tgz 生成到 `.research/packages/dsh-waymark-0.2.0-alpha.1.tgz`。在装有匹配版本 dsh 的终端安装到 web profile：
 
 ```sh
-dsh plugin --profile web add -w ./dsh-waymark-0.1.0.tgz
+dsh plugin --profile web add -w ./.research/packages/dsh-waymark-0.2.0-alpha.1.tgz
 dsh --profile web --dump-config
 dsh web
 ```
@@ -114,7 +120,7 @@ shell 失败按已安装工具契约解释：isError 不覆盖全部命令非零
 
 核心零运行依赖，所有单元测试夹具独立合成。真实会话经官方只读查询服务处理；不会向网络上传，也不调用 LLM、遥测、压缩、记忆归档或自动阻断。宿主及其他插件的网络行为不属于 Waymark。
 
-参考插件的能力方向已融入统一的 Audit/Diagnose/Evidence/Improve/Evaluate 流程；没有捆绑执行第三方插件。实时 Guard、上下文压缩、Obsidian/博客发布、Claude Code/Codex 适配不在 v0.1。
+没有捆绑执行第三方插件。自动拦截、暂停/恢复、上下文压缩、Obsidian/博客发布、Claude Code/Codex 适配不在此 Alpha 中。
 
 历史十会话批次检测到八项 R3，用户于 2026-11-02 确认全部认同，该批用户认同率为 8/8（100%），没有触发低于 50% 的阈值重测条件。R1/R2/R4 未触发；原十四个未报告片段后来按新增归档限制筛除并重建，不再整体使用。该历史结果不代表普遍准确率、召回率或实际节省，逐项反馈及证据仅保留本地。
 
@@ -122,7 +128,7 @@ shell 失败按已安装工具契约解释：isError 不覆盖全部命令非零
 
 生产命令已接入宿主 workspaceRegistry 归档准入，当前、显式 id、last 和导出均排除归档或未登记会话；状态不可确认时拒绝处理。last 仅读同工作区已获准候选。旧研究脚本仍拒绝直接读用户会话根。
 
-## 实时观察与提醒（开发中）
+## 实时观察与提醒（实验性）
 
 ```text
 /waymark guard status
@@ -144,4 +150,8 @@ profile 的 waymark config 可增加 `live: {failWarnMin: 2, bigOutputTokens: 40
 - [发布清单](docs/RELEASE.md)
 - [历史执行计划](docs/PLAN.md)
 
-MIT License。尚未 push、publish 或设置远端 GitHub topic。
+## 反馈
+
+请通过 [GitHub Issues](https://github.com/ZhSM27/dsh-waymark/issues) 提交误报、漏报、兼容性或功能建议。注明 Waymark/dsh/Node/操作系统版本、预期和实际行为；优先提供合成或脱敏最小复现，不要上传原始会话、密钥或私人路径。诊断反馈模板支持 helpful/unnecessary/missed/uncertain，不确定也欢迎报告。
+
+[更新记录](CHANGELOG.md) · [已知限制](docs/KNOWN-ISSUES.md) · MIT License。

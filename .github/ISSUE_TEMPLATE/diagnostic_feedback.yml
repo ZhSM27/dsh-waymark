@@ -1,0 +1,24 @@
+name: Diagnostic feedback / 检测反馈
+description: Tell us whether a finding or reminder helped.
+body:
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Rule
+      options: [R1 repeated failure, R2 repeated read, R3 large output, R4 correction, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: judgment
+    attributes:
+      label: Your judgment / 你的判断
+      options: [Helpful, Unnecessary, Missed finding, Uncertain]
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Minimal context / 最小背景
+      description: Explain why, using synthetic or redacted evidence. Never paste credentials or a full conversation.
+    validations:
+      required: true
