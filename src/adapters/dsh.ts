@@ -5,7 +5,7 @@ import { win32, posix } from 'node:path';
 
 /** Structural public DTOs verified against dsh 0.2.1-rc.5. Runtime input is validated. */
 export interface DshSnapshot {
-  readonly session: { readonly id: string; readonly cwd?: string; readonly version: number };
+  readonly session: { readonly id: string; readonly cwd?: string; readonly version: number; readonly isSeeded?: boolean };
   readonly inheritedEventCount: number;
   readonly events: readonly unknown[];
 }

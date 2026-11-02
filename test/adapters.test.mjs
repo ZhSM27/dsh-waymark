@@ -55,12 +55,12 @@ test('malformed arguments and interrupted attempts do not fabricate loops',()=>{
 test('command defaults to current session, last is scoped, and cancellation/errors are sanitized',async()=>{
   let definition, selected;
   const snap=snapshot([]);
-  const ctx={commands:{register(value){definition=value;return()=>{};}},sessionQuery:{
+  const ctx={workspaceRegistry:{archivedSessionIds:[],list(){return [{path:'synthetic-workspace',sessionIds:['synthetic-current','synthetic-earlier','synthetic-other']}];}},commands:{register(value){definition=value;return()=>{};}},sessionQuery:{
     async listSessions(){return [
       {persisted:true,header:{id:'synthetic-other',cwd:'other',createdAt:3}},
       {persisted:true,header:{id:'synthetic-earlier',cwd:'synthetic-workspace',createdAt:1}},
       {persisted:true,header:{id:'synthetic-current',cwd:'synthetic-workspace',createdAt:2}},
-    ];},async readSession(id){selected=id;return snap;}}};
+    ];},async readSession(id){selected=id;return {...snap,session:{...snap.session,id,cwd:id==='synthetic-other'?'other':'synthetic-workspace',createdAt:id==='synthetic-earlier'?1:2}};}}};
   apply(ctx);
   const invocation={agent:{session:{id:'synthetic-current',header:{cwd:'synthetic-workspace'}}},rawInput:'retro',signal:new AbortController().signal};
   assert.equal((await definition.handler(invocation)).kind,'success');assert.equal(selected,'synthetic-current');

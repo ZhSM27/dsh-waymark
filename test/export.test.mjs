@@ -33,7 +33,7 @@ test('native command export mode writes Markdown, then reports an existing targe
   const cwd=await mkdtemp(join(tmpdir(),'waymark-synthetic-command-'));
   try {
     let definition;
-    apply({commands:{register(value){definition=value;return()=>{};}},sessionQuery:{async listSessions(){return[];},
+    apply({workspaceRegistry:{archivedSessionIds:[],list(){return [{path:cwd,sessionIds:['synthetic']}];}},commands:{register(value){definition=value;return()=>{};}},sessionQuery:{async listSessions(){return[];},
       async readSession(){return{session:{id:'synthetic',version:4},inheritedEventCount:0,events:[]};}}});
     const invocation={agent:{session:{id:'synthetic',header:{cwd}}},signal:new AbortController().signal,rawInput:'retro --export example.md'};
     assert.equal((await definition.handler(invocation)).kind,'success');

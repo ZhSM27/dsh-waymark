@@ -4,3 +4,5 @@ export { analyzeSession } from './analyze.ts';
 export { renderReport, renderMarkdown } from './render.ts';
 export { summarizeReview } from './review.ts';
 export type { ReviewRow } from './review.ts';
+export { GuardState, guardOptions } from './guard.ts';
+export type { GuardMode, GuardNotice, GuardOptions } from './guard.ts';
