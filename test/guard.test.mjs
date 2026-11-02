@@ -85,3 +85,20 @@ test('archive status changing during snapshot read suppresses any report',async(
   const result=await h.command.handler({agent:h.agent,rawInput:'retro synthetic-old --json',signal:new AbortController().signal});
   assert.equal(result.kind,'error');assert.doesNotMatch(result.text,/schemaVersion/);
 });
+test('verified delivery/title bookkeeping cannot erase a live retry chain or pending notice',async()=>{
+  const h=harness();h.guard.command(h.agent,['mode','warn']);await h.attempt();
+  const metadata=()=>{for(const type of ['session-log-deepseek/delivery-accepted','session/title','session/title-llm-request'])h.listeners.get('session/event')(h.agent.session,{type,data:{}});};
+  metadata();await h.attempt();metadata();assert.match((await h.step()).messages[0].content[0].text,/R1/);
+});
+test('unrecognized required records still invalidate a live retry chain',async()=>{
+  const h=harness();h.guard.command(h.agent,['mode','warn']);await h.attempt();
+  h.listeners.get('session/event')(h.agent.session,{type:'synthetic/unknown-required',data:{}});
+  await h.attempt();assert.equal((await h.step()).messages.length,0);
+});
+test('completed tagged turn reason preserves user-only notices; aborted reason clears them',async()=>{
+  const h=harness();h.guard.command(h.agent,['delivery','user']);h.guard.command(h.agent,['mode','warn']);await h.attempt({body:'x'.repeat(16001),isError:false});
+  h.listeners.get('session/event')(h.agent.session,{type:'turn/end',data:{reason:{kind:'completed'}}});
+  assert.equal(JSON.parse(h.guard.command(h.agent,['status'])).pendingNotices,1);
+  h.listeners.get('session/event')(h.agent.session,{type:'turn/end',data:{reason:{kind:'aborted',reason:{kind:'user'}}}});
+  assert.equal(JSON.parse(h.guard.command(h.agent,['status'])).pendingNotices,0);
+});

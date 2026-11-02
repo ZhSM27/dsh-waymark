@@ -82,3 +82,13 @@ test('file semantics use canonical result metadata and verified read range/conte
   const file=adaptDshSession(raw).input.events.at(-1).file;
   assert.equal(file.operation,'read');assert.equal(file.range,'1:1');assert.equal(file.fingerprint.length,64);
 });
+test('turn end uses the installed tagged reason rather than a string comparison',()=>{
+  const complete=adaptDshSession(snapshot([{type:'turn/start',data:{turn:1}},{type:'turn/end',data:{turn:1,reason:{kind:'completed'}}}]));
+  assert.equal(complete.input.events.filter(event=>event.kind==='boundary').length,0);
+  const aborted=adaptDshSession(snapshot([{type:'turn/start',data:{turn:1}},{type:'turn/end',data:{turn:1,reason:{kind:'aborted',reason:{kind:'user'}}}}]));
+  assert.equal(aborted.input.events[0].reason,'interruption');
+});
+test('delivery watermarks and title metadata do not hide offline failure loops',()=>{
+  const events=[];for(let i=0;i<3;i++)events.push(rawCall(String(i)),rawResult(String(i)),{type:'session-log-deepseek/delivery-accepted',data:{}},{type:'session/title',data:{}});
+  assert.equal(analyzeSession(adaptDshSession(snapshot(events)).input).findings.filter(f=>f.rule==='R1').length,1);
+});

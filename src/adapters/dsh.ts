@@ -109,9 +109,10 @@ export function adaptDshSession(snapshot: DshSnapshot): { input: SessionInput; i
       case 'assistant/attempt': boundary('interruption'); issues.push('Uncommitted model attempts are not included in request-usage totals'); break;
       case 'session/end-seed': boundary('history-cut'); break;
       case 'turn/end':
-        if (data.reason !== 'completed') boundary('interruption');
+        if (record(data.reason).kind !== 'completed') boundary('interruption');
         turn = null; break;
       case 'turn/start': case 'step/start': case 'step/end': case 'request/header': case 'request/context':
+      case 'session-log-deepseek/delivery-accepted': case 'session/title': case 'session/title-llm-request':
       case 'command/run': case 'command/done': break;
       default:
         // Unknown required records can alter interpretation: stop retry grouping conservatively.

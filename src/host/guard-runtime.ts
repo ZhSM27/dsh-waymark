@@ -61,9 +61,12 @@ export function installGuard(ctx: LiveContext, overrides: Partial<GuardOptions> 
       if (event.type === 'tool/result' && typeof event.data?.message?.toolCallId === 'string') state.reference(event.data.message.toolCallId,event.seq);
       if (event.type === 'user/message' && record(event.data?.source).kind === 'user'
         || ['assistant/attempt', 'session/end-seed'].includes(event.type)
-        || event.type === 'turn/end' && event.data?.reason !== 'completed'
+        || event.type === 'turn/end' && record(event.data?.reason).kind !== 'completed'
         || event.surfaceOp?.op === 'replace') state.reset();
-      else if (!['user/message','system/message','developer/message','assistant/message','tool/call','tool/result','turn/start','turn/end','step/start','step/end','request/header','request/context','command/run','command/done'].includes(event.type) && event.ignorable !== true) state.reset();
+      // Installed owner source: this event only advances the session-log delivery watermark.
+      // Titles likewise change display metadata, never the model-visible task or tool state.
+      else if (!['user/message','system/message','developer/message','assistant/message','tool/call','tool/result','turn/start','turn/end','step/start','step/end','request/header','request/context','command/run','command/done',
+        'session-log-deepseek/delivery-accepted','session/title','session/title-llm-request'].includes(event.type) && event.ignorable !== true) state.reset();
     }
   });
   ctx.on?.('session/disposed', session => { for (const agent of states.keys()) if (agent.session.id === session.id) states.delete(agent); });
