@@ -6,6 +6,8 @@ DeepSeek Harness 的本地 Agent 工作流程优化插件：从已保存会话�
 
 ## 安装
 
+v0.2 开发中已加入 observe/warn 和生产归档准入，见 [验收记录](docs/LIVE-VALIDATION.md)。原生流水线验证通过，完整 Web 命令 UI 验收待完成，当前不提供自动拦截。
+
 需要 Node.js 24.11+（实测 24.22.2）和 pnpm 9.15.0。包名为 `dsh-waymark`，npm 同名是否可用需发布前重新检查；目前不要运行 registry 安装命令。
 
 从本项目构建：
@@ -118,7 +120,23 @@ shell 失败按已安装工具契约解释：isError 不覆盖全部命令非零
 
 以上为历史批次。用户新增“不得使用归档会话”限制后，本轮已先排除 7 条归档和 2 条不支持的历史格式，仅使用 15 条合格会话重建材料。两个子代理复核 12 个未报告窗口、32 个定向候选，发现 1 条低置信度纠偏漏报线索和 1 处中断分类疑点。历史整体认同率不作本轮指标，规则效果仍有限制；见 [未归档专项结果](docs/UNARCHIVED-REVIEW.md)。
 
-归档保护目前作用于研究采样流程；通用生产命令尚未默认排除归档，不用于本轮真实采样。旧研究脚本现拒绝直接读用户会话根。
+生产命令已接入宿主 workspaceRegistry 归档准入，当前、显式 id、last 和导出均排除归档或未登记会话；状态不可确认时拒绝处理。last 仅读同工作区已获准候选。旧研究脚本仍拒绝直接读用户会话根。
+
+## 实时观察与提醒（开发中）
+
+```text
+/waymark guard status
+/waymark guard mode observe
+/waymark guard mode warn
+/waymark guard delivery user
+/waymark guard delivery model
+/waymark guard feedback 1 helpful
+/waymark guard mode off
+```
+
+默认 off，按当前会话开启。observe 只计数，warn 提供 R1/R3 提示；不拒绝或自动重试工具。默认 delivery=model，提示会随宿主下一次模型请求发送；delivery=user 将提示留在本地 status，不进入模型上下文。状态和反馈只在内存，重启不保留。通知 id、seq 证据、次数与估算提示成本可在 status 查看。PTC 子调用和继承会话暂不覆盖。
+
+profile 的 waymark config 可增加 `live: {failWarnMin: 2, bigOutputTokens: 4000, maxPerSession: 5, maxChars: 400}`。failWarnMin 至少 2；maxPerSession 为 1–100 整数；maxChars 为 150–4000 整数；bigOutputTokens 为非负有限数，缺省沿用离线同名阈值。每轮最多一条，独立于离线 failLoopMin。未知 live 键拒绝。
 
 - [接口与核心口径](docs/CORE.md)
 - [dsh 字段依据](docs/SCHEMA.md)
