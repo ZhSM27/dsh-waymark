@@ -22,12 +22,16 @@
 - [x] 将归档保护接入生产命令；默认排除归档或未登记会话。
 - [x] 从已登录浏览器确认 GitHub 账号 ZhSM27；仓库拟为 dsh-waymark。
 - [x] 发布前重查 npm 名称 dsh-waymark，查询返回未占用；不代表名称保留。
-- [ ] 复查最终 tgz 内容和兼容声明；目标环境若不同于当前测试环境，另做对应验收。
+- [x] 复查最终 tgz 内容和兼容声明；公开 GitHub 安装包下载后哈希匹配，干净 consumer 安装和导入通过。
 - [x] 用户明确批准 GitHub 和 npm 公开发布。
 - [x] 移除 private:true，补充 repository/bugs/homepage，配置 public/alpha。
-- [ ] 扫描全部可达 Git 历史及最终包，确认不含密钥、真实会话和私人文件。
-- [ ] 从干净检出使用冻结锁文件安装、测试并构建。
-- [ ] 验证 GitHub 远端 CI。
-- [ ] 批准后执行 push、打 tag/release、npm publish，并在仓库设置 dsh-plugin topic。
+- [x] 扫描全部可达 Git 历史及最终包：16 个提交、138 个 blob 的常见凭据/私人目录模式检查无发现，未跟踪研究数据。此为模式检查，不宣称全面安全审计。
+- [x] 从干净检出使用冻结锁文件安装、测试并构建。
+- [x] GitHub 首次远端 CI 的 Windows/Linux 均通过（run 41418008650）。
+- [x] 创建公开仓库 ZhSM27/dsh-waymark，推送 main，设置 dsh-plugin 等 topics。
+- [x] 发布 v0.2.0-alpha.1 GitHub prerelease，上传审核过的 tgz。
+- [ ] npm publish：登录账号 zhsm27，首次请求被官方 403 拒绝，要求先启用 2FA；尚未发布成功。
+
+GitHub 安装包 SHA-256：`73b9270a4b8645da870510f15722e8f2c321918feb271dac61e0d789b8424cb5`。npm 待发布的包与该公开资产是同一文件。
 
 当前不宣称实际 token 节省、模型质量提升或普遍诊断准确率。Alpha 提供 R1/R3 observe/warn；自动拦截、暂停/恢复、awesome 列表 PR 和其他 harness 适配仍不在本次范围。

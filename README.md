@@ -4,6 +4,8 @@ DeepSeek Harness 的本地 Agent 工作流程优化插件：从已保存会话�
 
 **0.2.0-alpha.1 · 开发者预览，欢迎反馈。** 支持会话复盘与显式开启的实时提醒；自动拦截尚未实现。仅适配并验证 **dsh 0.2.1-rc.5**；dsh 升级可能破坏接口。请先阅读 [已知限制](docs/KNOWN-ISSUES.md)。
 
+GitHub Alpha 已发布。[下载预发布安装包](https://github.com/ZhSM27/dsh-waymark/releases/tag/v0.2.0-alpha.1) 后执行 `dsh plugin --profile web add -w ./dsh-waymark-0.2.0-alpha.1.tgz`。npm 发布目前等待维护者完成账号 2FA，以下 registry 安装命令在发布完成后可用。
+
 ## 安装
 
 已在 Codex 内置浏览器验证原生命令、R1/R3 提醒送达和仅用户可见模式，见 [浏览器验收](docs/BROWSER-ACCEPTANCE.md)。
